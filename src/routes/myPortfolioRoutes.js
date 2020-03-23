@@ -72,10 +72,10 @@ router.put("/about",upload.single('image'),async (req,res)=>{
 		const {name,type,about,statement}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		if(req.file){
-			await cloudinary.v2.uploader.destroy(portfolio.headerImage.imageId);
+			await cloudinary.v2.uploader.destroy(portfolio.imageId);
 			const result = await cloudinary.v2.uploader.upload(req.file.path);
-			portfolio.headerImage.image = result.secure_url;
-			portfolio.headerImage.imageId = result.public_id;
+			portfolio.image = result.secure_url;
+			portfolio.imageId = result.public_id;
 		}		
 		portfolio.about=about;
 		portfolio.type=type;
@@ -177,7 +177,36 @@ router.delete('/videos/:id', async (req,res)=>{
 	}
 })
 
-
+router.post("/collections", upload.array('photos', 10), async (req,res)=>{
+	console.log(req.files)
+	let multipleUpload = new Promise(async (resolve,reject)=>{
+		let newPhotos = [];
+		for (x=0; x<req.files.length;x++){
+			await cloudinary.v2.uploader.upload(req.files[x].path, (err, result)=>{
+				if(err){
+					reject(err)
+				}else{
+					newPhotos.push({
+						image:result.secure_url,
+						imageId:result.public_id
+					})
+				}
+			});
+		}
+		resolve(newPhotos);
+	})
+	.then((result)=>result)
+	.catch((err)=>err)
+	try{
+		let photosArr = await multipleUpload;
+		const portfolio= await Portfolio.findOne({userId:req.user._id});
+		portfolio.collections.push({title:req.body.title,description:req.body.description, photos: photosArr});
+		await portfolio.save();
+		return res.status(200).send(portfolio);	
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
 
 
 module.exports=router;
