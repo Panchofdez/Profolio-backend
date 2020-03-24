@@ -36,7 +36,7 @@ router.use(requireAuth);
 router.get("/", async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments');
-		return res.send(portfolio);
+		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
 	}
@@ -78,6 +78,7 @@ router.put("/about",upload.single('image'),async (req,res)=>{
 			portfolio.imageId = result.public_id;
 		}		
 		portfolio.about=about;
+		portfolio.name=name;
 		portfolio.type=type;
 		portfolio.headerImage=headerImage;
 		portfolio.statement=statement
@@ -92,6 +93,7 @@ router.put("/about",upload.single('image'),async (req,res)=>{
 router.post('/timeline', async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		console.log(req.body)
 		portfolio.timeline.push(req.body.post)
 		await portfolio.save();
 		return res.status(200).send(portfolio);
