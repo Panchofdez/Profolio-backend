@@ -21,9 +21,7 @@ router.get("/", async (req,res)=>{
 
 router.get("/:id",async (req,res)=>{
 	try{
-		console.log(req.params.id)
 		const portfolio = await Portfolio.findById(req.params.id).populate('comments');
-		console.log(portfolio);
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
