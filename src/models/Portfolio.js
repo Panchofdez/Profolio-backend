@@ -31,6 +31,10 @@ const portfolioSchema = new mongoose.Schema({
 	},
 	profileImage:String,
 	profileImageId:String,
+	email:String,
+	phone:String,
+	facebook:String,
+	instagram:String,
 	birthday:String,
 	location:String,
 	type:String,
@@ -50,6 +54,6 @@ const portfolioSchema = new mongoose.Schema({
 	]
 })
 
-
+portfolioSchema.index({type:'text',location:'text',name:'text'});
 
 mongoose.model('Portfolio', portfolioSchema);

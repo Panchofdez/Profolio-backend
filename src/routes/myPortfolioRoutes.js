@@ -78,10 +78,16 @@ router.put("/profile", upload.single('image'), async (req, res)=>{
 				portfolio.profileImageId = result.public_id;
 			});			
 		}
-		const {type, location, birthday} = req.body;
+		console.log(req.body);
+		const {type, location, birthday,name, email, phone, facebook, instagram} = req.body;
 		portfolio.type=type;
 		portfolio.location=location;
 		portfolio.birthday=birthday;
+		portfolio.name=name;
+		portfolio.email=email;
+		portfolio.phone=phone;
+		portfolio.instagram=instagram;
+		portfolio.facebook=facebook;
 		await portfolio.save();
 		return res.status(200).send(portfolio);
 	}catch(err){
@@ -101,8 +107,7 @@ router.post("/about",upload.single('image'),async (req,res)=>{
 				portfolio.headerImageId = result.public_id;
 			});
 		}
-		const {name,statement, about} = req.body;
-		portfolio.name = name;
+		const {statement, about} = req.body;
 		portfolio.statement=statement;
 		portfolio.about =about;
 		await portfolio.save();
@@ -115,7 +120,7 @@ router.post("/about",upload.single('image'),async (req,res)=>{
 
 router.put("/about",upload.single('image'),async (req,res)=>{
 	try{
-		const {name,about,statement}=req.body;
+		const {about,statement}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		if(req.file){
 			await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
@@ -124,14 +129,14 @@ router.put("/about",upload.single('image'),async (req,res)=>{
 			portfolio.headerImageId = result.public_id;
 		}		
 		portfolio.about=about;
-		portfolio.name=name;
-		portfolio.statement=statement
+		portfolio.statement=statement;
 		await portfolio.save();
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
 	}
 })
+
 
 
 router.post('/timeline', async (req, res)=>{
