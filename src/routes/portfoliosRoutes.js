@@ -28,7 +28,7 @@ router.get("/", requireAuth , async (req,res)=>{
 
 router.get("/:id",async (req,res)=>{
 	try{
-		const portfolio = await Portfolio.findById(req.params.id).populate('comments');
+		const portfolio = await Portfolio.findById(req.params.id).populate('comments').populate('supporters');
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -70,7 +70,6 @@ router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 	try{
 		console.log(req.params.comment_id)
 		const comment = await Comment.findOne({_id:req.params.comment_id});
-		console.log(comment);
 		if(!comment.author.id.equals(req.user._id)){
 			console.log("Arrived");
 			return res.status(400).send({error:"You can't delete other user's comments"});
@@ -87,6 +86,44 @@ router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 	}
 })
 
+router.post('/:id/endorse', requireAuth, async(req,res)=>{
+	try{
+		console.log(req.params.id);
+		const portfolio = await Portfolio.findById(req.params.id);
+		const currentUser = await User.findById(req.user._id);
+		const isSupporting = portfolio.supporters.find((id)=>id.equals(req.user._id));
+		if(portfolio.userId.equals(req.user._id)){
+			return res.status(400).send({error:"You can't endorse yourself"});
+		}
+		if(isSupporting){
+			return res.status(400).send({error:"You can't endorse the user again"});
+		}
+		portfolio.supporters.push(req.user._id);
+		await portfolio.save();
+		currentUser.endorsing.push(portfolio._id);
+		await currentUser.save();			
+		return res.status(200).send(portfolio);	
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
+
+
+router.post('/:id/stopsupport', requireAuth, async(req, res)=>{
+	try{
+		const portfolio = await Portfolio.findById(req.params.id);
+		const currentUser = await User.findById(req.user._id);
+		const supporters = portfolio.supporters.filter((id)=>!id.equals(req.user._id));
+		portfolio.supporters = supporters;
+		await portfolio.save();
+		const supporting = currentUser.endorsing.filter((id)=>!id.equals(portfolio._id));
+		currentUser.endorsing = supporting;
+		await currentUser.save();
+		return res.status(200).send(portfolio);
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
 
 function escapeRegex(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");

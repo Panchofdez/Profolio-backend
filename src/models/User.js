@@ -18,7 +18,13 @@ const userSchema = new mongoose.Schema({
 	portfolio:{
 		type:mongoose.Schema.Types.ObjectId,
 		ref:'Portfolio'
-	}
+	},
+	endorsing:[
+		{
+			type:mongoose.Schema.Types.ObjectId,
+			ref:'Portfolio'
+		}
+	]
 
 })
 
