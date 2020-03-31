@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt')
-;
+const bcrypt = require('bcrypt');
+
+const notificationSchema = new mongoose.Schema({
+	text:String,
+	profileImage:String,
+	createdAt:{type:Date, default:Date.now},
+	read:{type:Boolean,default: false},
+	portfolio:{
+		type:mongoose.Schema.Types.ObjectId,
+		ref:'Portfolio'
+	}
+
+})
+
 const userSchema = new mongoose.Schema({
 	email:{
 		type:String, 
@@ -15,6 +27,7 @@ const userSchema = new mongoose.Schema({
 		type:String,
 		required:true
 	},
+	profileImage:{type:String},
 	portfolio:{
 		type:mongoose.Schema.Types.ObjectId,
 		ref:'Portfolio'
@@ -24,7 +37,8 @@ const userSchema = new mongoose.Schema({
 			type:mongoose.Schema.Types.ObjectId,
 			ref:'Portfolio'
 		}
-	]
+	],
+	notifications:[notificationSchema]
 
 })
 

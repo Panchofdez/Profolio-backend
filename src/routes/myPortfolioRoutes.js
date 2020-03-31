@@ -35,7 +35,7 @@ router.use(requireAuth);
 
 router.get("/", async (req, res)=>{
 	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments');
+		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments').populate('supporters');
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -45,6 +45,7 @@ router.get("/", async (req, res)=>{
 
 router.post("/profile",upload.single('image'), async (req,res)=>{
 	try{
+		const user = await User.findById(req.user._id);
 		if(req.file){
 			await cloudinary.v2.uploader.upload(req.file.path, (err,result)=>{
 				if(err){
@@ -52,11 +53,11 @@ router.post("/profile",upload.single('image'), async (req,res)=>{
 				}
 				req.body.profileImage = result.secure_url;
 				req.body.profileImageId = result.public_id;
+				user.profileImage = result.secure_url;
 			})
 		}
 		const portfolio = new Portfolio({userId:req.user._id, ...req.body});
-		await portfolio.save();
-		const user = await User.findById(req.user._id);
+		await portfolio.save();		
 		user.portfolio = portfolio._id;
 		await user.save();
 		return res.status(200).send(portfolio);
@@ -68,12 +69,14 @@ router.post("/profile",upload.single('image'), async (req,res)=>{
 router.put("/profile", upload.single('image'), async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
+		const user = await User.findById(req.user._id);
 		if(req.file){
 			await cloudinary.v2.uploader.destroy(portfolio.profileImageId);
 			await cloudinary.v2.uploader.upload(req.file.path, (err,result)=>{
 				if(err){
 					return res.status(400).send({error:err.message});
 				}
+				user.profileImage=result.secure_url;
 				portfolio.profileImage = result.secure_url;
 				portfolio.profileImageId = result.public_id;
 			});			
@@ -89,6 +92,7 @@ router.put("/profile", upload.single('image'), async (req, res)=>{
 		portfolio.instagram=instagram;
 		portfolio.facebook=facebook;
 		await portfolio.save();
+		await user.save();
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});

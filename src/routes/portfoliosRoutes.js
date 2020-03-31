@@ -57,6 +57,16 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 		
 		portfolio.comments.push(comment);
 		await portfolio.save();
+		const user = await User.findOne({portfolio:req.params.id});
+		console.log(user);
+		const notification ={
+			text:`${req.user.name} commented on your portfolio!`,
+			portfolio:req.user.portfolio,
+			profileImage:req.user.profileImage
+		}
+		user.notifications.push(notification);
+		console.log(user.notifications);
+		await user.save();
 		return res.status(200).send(portfolio);
 	
 		
@@ -68,17 +78,24 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 
 router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 	try{
-		console.log(req.params.comment_id)
 		const comment = await Comment.findOne({_id:req.params.comment_id});
 		if(!comment.author.id.equals(req.user._id)){
-			console.log("Arrived");
 			return res.status(400).send({error:"You can't delete other user's comments"});
 		}
 		const portfolio = await Portfolio.findById(req.params.id).populate('comments');
 		portfolio.comments.remove(req.params.comment_id);
-		await portfolio.save();
-		
+		await portfolio.save();		
 		await comment.remove();
+		const user = await User.findOne({portfolio:req.params.id});
+		console.log(user);
+		const notification ={
+			text:`${req.user.name} deleted their comment`,
+			portfolio:req.user.portfolio,
+			profileImage:req.user.profileImage
+		}
+		user.notifications.push(notification);
+		console.log(user.notifications);
+		await user.save();
 		return res.status(200).send(portfolio);
 
 	}catch(err){
@@ -88,7 +105,6 @@ router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 
 router.post('/:id/endorse', requireAuth, async(req,res)=>{
 	try{
-		console.log(req.params.id);
 		const portfolio = await Portfolio.findById(req.params.id);
 		const currentUser = await User.findById(req.user._id);
 		const isSupporting = portfolio.supporters.find((id)=>id.equals(req.user._id));
@@ -102,6 +118,16 @@ router.post('/:id/endorse', requireAuth, async(req,res)=>{
 		await portfolio.save();
 		currentUser.endorsing.push(portfolio._id);
 		await currentUser.save();			
+		const user = await User.findOne({portfolio:req.params.id});
+		console.log(user);
+		const notification ={
+			text:`${req.user.name} has endorsed you!`,
+			portfolio:req.user.portfolio,
+			profileImage:req.user.profileImage
+		}
+		user.notifications.push(notification);
+		console.log(user.notifications);
+		await user.save();
 		return res.status(200).send(portfolio);	
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -109,7 +135,7 @@ router.post('/:id/endorse', requireAuth, async(req,res)=>{
 })
 
 
-router.post('/:id/stopsupport', requireAuth, async(req, res)=>{
+router.post('/:id/stopendorse', requireAuth, async(req, res)=>{
 	try{
 		const portfolio = await Portfolio.findById(req.params.id);
 		const currentUser = await User.findById(req.user._id);
@@ -119,6 +145,16 @@ router.post('/:id/stopsupport', requireAuth, async(req, res)=>{
 		const supporting = currentUser.endorsing.filter((id)=>!id.equals(portfolio._id));
 		currentUser.endorsing = supporting;
 		await currentUser.save();
+		const user = await User.findOne({portfolio:req.params.id});
+		console.log(user);
+		const notification ={
+			text:`${req.user.name} has stopped endorsing you`,
+			portfolio:req.user.portfolio,
+			profileImage:req.user.profileImage
+		}
+		user.notifications.push(notification);
+		console.log(user.notifications)
+		await user.save();
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
