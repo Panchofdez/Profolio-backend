@@ -38,10 +38,10 @@ app.get('/', (req, res)=>{
 	res.send('Hello');;
 })
 
-app.use(authRoutes);
-app.use('/portfolios',portfoliosRoutes);
-app.use('/myportfolio',myPortfolioRoutes);
-app.use(userProfileRoutes);
+app.use('/api',authRoutes);
+app.use('/api/portfolios',portfoliosRoutes);
+app.use('/api/myportfolio',myPortfolioRoutes);
+app.use('/api', userProfileRoutes);
 
 
 app.listen(process.env.PORT || 3001, ()=>{
