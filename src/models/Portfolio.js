@@ -52,10 +52,10 @@ const portfolioSchema = new mongoose.Schema({
 			ref:'Comment'	
 		}
 	],
-	supporters:[
-		{
-				type:mongoose.Schema.Types.ObjectId,
-				ref:'User'
+	recommendations:[
+		{			
+			type:mongoose.Schema.Types.ObjectId,
+			ref:'User'
 		}
 	]
 })

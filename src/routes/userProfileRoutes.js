@@ -20,7 +20,11 @@ router.get("/user", async (req, res)=>{
 
 router.put("/notifications/:id", async(req,res)=>{
 	try{
+		console.log(req.user._id);
+		console.log(req.params.id);
 		const user = await User.findById(req.user._id);
+		console.log(user);
+		console.log(user.notifications);
 		const notifications = user.notifications.map((n)=>{
 			if(n._id.equals(req.params.id)){
 				n.read=true;
@@ -28,6 +32,7 @@ router.put("/notifications/:id", async(req,res)=>{
 			return n;
 		});
 		user.notifications = notifications;
+		console.log(user.notifications);
 		await user.save();
 		const unread = user.notifications.filter((n)=>n.read===false);
 		res.status(200).send({userId:user._id, name:user.name, profileImage:user.profileImage, notifications:unread});

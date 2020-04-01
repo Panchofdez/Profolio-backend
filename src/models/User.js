@@ -32,10 +32,10 @@ const userSchema = new mongoose.Schema({
 		type:mongoose.Schema.Types.ObjectId,
 		ref:'Portfolio'
 	},
-	endorsing:[
+	recommending:[
 		{
 			type:mongoose.Schema.Types.ObjectId,
-			ref:'Portfolio'
+			ref:'User'
 		}
 	],
 	notifications:[notificationSchema]

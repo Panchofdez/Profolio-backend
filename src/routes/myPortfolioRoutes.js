@@ -35,13 +35,26 @@ router.use(requireAuth);
 
 router.get("/", async (req, res)=>{
 	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments').populate('supporters');
+		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments');
 		return res.status(200).send(portfolio);
 	}catch(err){
+		console.log(err);
 		return res.status(400).send({error:err.message});
 	}
 	
 });
+
+router.get('/recommendations', async(req, res)=>{
+	try{
+		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('recommendations');
+		const user = await User.findById(req.user._id).populate('recommending');
+		console.log(portfolio.recommendations);
+		console.log(user.recommending);
+		return res.status(200).send({recommendations:portfolio.recommendations, recommending:user.recommending});
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
 
 router.post("/profile",upload.single('image'), async (req,res)=>{
 	try{
@@ -127,7 +140,10 @@ router.put("/about",upload.single('image'),async (req,res)=>{
 		const {about,statement}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		if(req.file){
-			await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
+			if(portfolio.headerImageId){
+				await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
+			}
+			
 			const result = await cloudinary.v2.uploader.upload(req.file.path);
 			portfolio.headerImage = result.secure_url;
 			portfolio.headerImageId = result.public_id;
