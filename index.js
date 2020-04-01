@@ -42,6 +42,11 @@ app.use(function(req, res, next) {
   );
   next();
 });
+
+app.get('/', (req, res)=>{
+	res.send('Hello');;
+})
+
 app.use(authRoutes);
 app.use('/portfolios',portfoliosRoutes);
 app.use('/myportfolio',myPortfolioRoutes);
