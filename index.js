@@ -20,7 +20,8 @@ mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true )
-mongoose.connect(`mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` || 'mongodb://localhost/portfolio-app');
+const mongodb_uri = `mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` || 'mongodb://localhost/portfolio-app'
+mongoose.connect(mongodb_uri);
 
 mongoose.connection.on('connected', ()=>{
 	console.log('Connected to mongodb');
@@ -32,16 +33,6 @@ mongoose.connection.on('error', (err)=>{
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
-app.use(cors());
-
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
 
 app.get('/', (req, res)=>{
 	res.send('Hello');;
