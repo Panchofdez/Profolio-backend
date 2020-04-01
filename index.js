@@ -20,7 +20,7 @@ mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true )
-mongoose.connect('mongodb://localhost/portfolio-app');
+mongoose.connect(`mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` || 'mongodb://localhost/portfolio-app');
 
 mongoose.connection.on('connected', ()=>{
 	console.log('Connected to mongodb');
