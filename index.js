@@ -20,7 +20,7 @@ mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true )
-const mongodb_uri = `mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` || 'mongodb://localhost/portfolio-app'
+const mongodb_uri = `mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` || 'mongodb://localhost/portfolio-app' 
 mongoose.connect(mongodb_uri);
 
 mongoose.connection.on('connected', ()=>{
@@ -44,6 +44,6 @@ app.use('/api/myportfolio',myPortfolioRoutes);
 app.use('/api', userProfileRoutes);
 
 
-app.listen(process.env.PORT || 3001, ()=>{
+app.listen(process.env.PORT || 3000, ()=>{
 	console.log('Server is running on port 3001...')
 })

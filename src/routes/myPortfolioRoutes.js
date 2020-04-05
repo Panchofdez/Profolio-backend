@@ -83,19 +83,15 @@ router.put("/profile", upload.single('image'), async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
 		const user = await User.findById(req.user._id);
-		if(req.file){
-			await cloudinary.v2.uploader.destroy(portfolio.profileImageId);
-			await cloudinary.v2.uploader.upload(req.file.path, (err,result)=>{
-				if(err){
-					return res.status(400).send({error:err.message});
-				}
-				user.profileImage=result.secure_url;
-				portfolio.profileImage = result.secure_url;
-				portfolio.profileImageId = result.public_id;
-			});			
-		}
 		console.log(req.body);
-		const {type, location, birthday,name, email, phone, facebook, instagram} = req.body;
+		const {type, location, birthday,name, email, phone, facebook, instagram, profileImage, profileImageId} = req.body;
+		console.log(profileImage);
+		if(profileImage){
+			await cloudinary.v2.uploader.destroy(portfolio.profileImageId);
+			portfolio.profileImage=profileImage;
+			portfolio.profileImageId=profileImageId;
+			user.profileImage=profileImage
+		}
 		portfolio.type=type;
 		portfolio.location=location;
 		portfolio.birthday=birthday;
@@ -124,7 +120,7 @@ router.post("/about",upload.single('image'),async (req,res)=>{
 				portfolio.headerImageId = result.public_id;
 			});
 		}
-		const {statement, about} = req.body;
+		const {statement, about, } = req.body;
 		portfolio.statement=statement;
 		portfolio.about =about;
 		await portfolio.save();
@@ -137,16 +133,14 @@ router.post("/about",upload.single('image'),async (req,res)=>{
 
 router.put("/about",upload.single('image'),async (req,res)=>{
 	try{
-		const {about,statement}=req.body;
+		const {about,statement, headerImage, headerImageId}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
-		if(req.file){
+		if(headerImage){
 			if(portfolio.headerImageId){
 				await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
 			}
-			
-			const result = await cloudinary.v2.uploader.upload(req.file.path);
-			portfolio.headerImage = result.secure_url;
-			portfolio.headerImageId = result.public_id;
+			portfolio.headerImage=headerImage;
+			portfolio.headerImageId=headerImageId;
 		}		
 		portfolio.about=about;
 		portfolio.statement=statement;
