@@ -56,19 +56,10 @@ router.get('/recommendations', async(req, res)=>{
 	}
 })
 
-router.post("/profile",upload.single('image'), async (req,res)=>{
+router.post("/profile", async (req,res)=>{
 	try{
 		const user = await User.findById(req.user._id);
-		if(req.file){
-			await cloudinary.v2.uploader.upload(req.file.path, (err,result)=>{
-				if(err){
-					return res.status(400).send({error:err.message});
-				}
-				req.body.profileImage = result.secure_url;
-				req.body.profileImageId = result.public_id;
-				user.profileImage = result.secure_url;
-			})
-		}
+		user.profileImage=req.body.profileImage;
 		const portfolio = new Portfolio({userId:req.user._id, ...req.body});
 		await portfolio.save();		
 		user.portfolio = portfolio._id;
@@ -79,7 +70,7 @@ router.post("/profile",upload.single('image'), async (req,res)=>{
 	}
 })
 
-router.put("/profile", upload.single('image'), async (req, res)=>{
+router.put("/profile", async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
 		const user = await User.findById(req.user._id);
@@ -108,19 +99,12 @@ router.put("/profile", upload.single('image'), async (req, res)=>{
 	}
 })
 
-router.post("/about",upload.single('image'),async (req,res)=>{
+router.post("/about",async (req,res)=>{
 	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id});
-		if(req.file){
-			await cloudinary.v2.uploader.upload(req.file.path, (err,result)=>{
-				if(err){
-					return res.status(400).send({error:err.message});
-				}
-				portfolio.headerImage = result.secure_url;
-				portfolio.headerImageId = result.public_id;
-			});
-		}
-		const {statement, about, } = req.body;
+		const {statement, about, headerImage, headerImageId} = req.body;
+		const portfolio = await Portfolio.findOne({userId:req.user._id});		
+		portfolio.headerImage = headerImage;
+		portfolio.headerImageId = headerImageId;		
 		portfolio.statement=statement;
 		portfolio.about =about;
 		await portfolio.save();
@@ -131,7 +115,7 @@ router.post("/about",upload.single('image'),async (req,res)=>{
 	
 });
 
-router.put("/about",upload.single('image'),async (req,res)=>{
+router.put("/about", async (req,res)=>{
 	try{
 		const {about,statement, headerImage, headerImageId}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
@@ -241,31 +225,24 @@ router.delete('/videos/:id', async (req,res)=>{
 	}
 })
 
-router.post("/collections", upload.array('photos', 5), async (req,res)=>{
-	let multipleUpload = new Promise(async (resolve,reject)=>{
-		let newPhotos = [];
-		console.log(req.files);
-		for (x=0; x<req.files.length;x++){
-			await cloudinary.v2.uploader.upload(req.files[x].path, (err, result)=>{
-				if(err){
-					reject(err)
-				}else{
-					newPhotos.push({
-						image:result.secure_url,
-						imageId:result.public_id
-					})
-				}
-			});
-		}
-		resolve(newPhotos);
-	})
-	.then((result)=>result)
-	.catch((err)=>err)
+router.post("/collections", async (req,res)=>{
 	try{
-		let photosArr = await multipleUpload;
+		console.log(req.body);
+		const {image, imageId, title, description} = req.body;
+		const photos =[];
+		if(image){
+			console.log('Hello');
+			photos.push({
+				image,
+				imageId
+			})
+		}
+		
+		console.log(photos)
 		const portfolio= await Portfolio.findOne({userId:req.user._id});
-		portfolio.collections.push({title:req.body.title,description:req.body.description, photos: photosArr});
+		portfolio.collections.push({title,description, photos});
 		await portfolio.save();
+		console.log(portfolio)
 		return res.status(200).send(portfolio);	
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -294,19 +271,20 @@ router.delete("/collections/:id", async(req,res)=>{
 
 router.delete("/collections/:id/photos/:photo_id", async(req,res)=>{
 	try{
+		const id = `panchofdez/${req.params.photo_id}`
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		const collections = portfolio.collections.map((collection)=>{
 			if(collection._id==req.params.id){
 				if(collection.photos.length===1){
 					return res.status(400).send({error:err.message});
 				}
-				collection.photos = collection.photos.filter((photo)=>photo.imageId!=req.params.photo_id);
+				collection.photos = collection.photos.filter((photo)=>photo.imageId!=id);
 			}
 			return collection;
 		});
 		portfolio.collections = collections;
 		await portfolio.save();
-		await cloudinary.v2.uploader.destroy(req.params.photo_id);
+		await cloudinary.v2.uploader.destroy(`panchofdez/${req.params.photo_id}`);
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -315,42 +293,30 @@ router.delete("/collections/:id/photos/:photo_id", async(req,res)=>{
 
 
 
-router.put("/collections/:id", upload.array('photos', 5), async(req,res)=>{
-	let multipleUpload = new Promise(async (resolve,reject)=>{
-		let newPhotos = [];
-		for (x=0; x<req.files.length;x++){
-			await cloudinary.v2.uploader.upload(req.files[x].path, (err, result)=>{
-				if(err){
-					reject(err)
-				}else{
-					newPhotos.push({
-						image:result.secure_url,
-						imageId:result.public_id
-					})
-				}
-			});
-		}
-		resolve(newPhotos);
-	})
-	.then((result)=>result)
-	.catch((err)=>err)
+router.put("/collections/:id", async(req,res)=>{
 	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id});
-		let photosArr=[];
-		if(req.files){
-			photosArr = await multipleUpload;
-			
+		const {image, imageId, title, description} = req.body;
+		const photos =[]
+		if(image){
+			console.log('Hello');
+			photos.push({
+				image,
+				imageId
+			})
 		}
+		console.log(photos);
+		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		const collections = portfolio.collections.map((collection)=>{
 			if(collection._id==req.params.id){
-				collection.title=req.body.title;
-				collection.description=req.body.description;
-				collection.photos = collection.photos.concat(photosArr);
+				collection.title=title;
+				collection.description=description;
+				collection.photos = collection.photos.concat(photos);
 			}
 			return collection;
 		})
 		portfolio.collections=collections;
 		portfolio.save();
+		console.log(portfolio);
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
