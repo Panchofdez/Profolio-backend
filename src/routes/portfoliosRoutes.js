@@ -65,6 +65,7 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 		}
 		user.notifications.push(notification);
 		await user.save();
+		console.log(portfolio);
 		return res.status(200).send(portfolio);
 	
 		
@@ -92,6 +93,7 @@ router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 		}
 		user.notifications.push(notification);
 		await user.save();
+		console.log(portfolio)
 		return res.status(200).send(portfolio);
 
 	}catch(err){

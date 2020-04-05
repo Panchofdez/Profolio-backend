@@ -31,7 +31,6 @@ mongoose.connection.on('error', (err)=>{
 	console.error("Error connecting to mongo db", err);
 })
 
-
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
