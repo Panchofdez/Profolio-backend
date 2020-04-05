@@ -20,7 +20,7 @@ mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true )
-const mongodb_uri ='mongodb://localhost/portfolio-app' || `mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` 
+const mongodb_uri = `mongodb+srv://panchofdez:${process.env.MONGODB_PASSWORD}@cluster0-nwpsf.mongodb.net/test?retryWrites=true&w=majority` || 'mongodb://localhost/portfolio-app'
 mongoose.connect(mongodb_uri);
 
 mongoose.connection.on('connected', ()=>{
@@ -31,7 +31,7 @@ mongoose.connection.on('error', (err)=>{
 	console.error("Error connecting to mongo db", err);
 })
 
-app.use(cors());
+
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 

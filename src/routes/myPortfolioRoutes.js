@@ -74,9 +74,7 @@ router.put("/profile", async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
 		const user = await User.findById(req.user._id);
-		console.log(req.body);
-		const {type, location, birthday,name, email, phone, facebook, instagram, profileImage, profileImageId} = req.body;
-		console.log(profileImage);
+		const {type, location, birthday,name, profileImage, profileImageId} = req.body;
 		if(profileImage){
 			await cloudinary.v2.uploader.destroy(portfolio.profileImageId);
 			portfolio.profileImage=profileImage;
@@ -87,10 +85,6 @@ router.put("/profile", async (req, res)=>{
 		portfolio.location=location;
 		portfolio.birthday=birthday;
 		portfolio.name=name;
-		portfolio.email=email;
-		portfolio.phone=phone;
-		portfolio.instagram=instagram;
-		portfolio.facebook=facebook;
 		await portfolio.save();
 		await user.save();
 		return res.status(200).send(portfolio);
@@ -117,6 +111,7 @@ router.post("/about",async (req,res)=>{
 
 router.put("/about", async (req,res)=>{
 	try{
+		console.log(req.body);
 		const {about,statement, headerImage, headerImageId}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		if(headerImage){
@@ -324,6 +319,20 @@ router.put("/collections/:id", async(req,res)=>{
 
 })
 
+router.put("/contactinfo", async(req,res)=>{
+	try{
+		const {email, phone, facebook, instagram} = req.body;
+		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		portfolio.email=email;
+		portfolio.phone=phone;
+		portfolio.facebook=facebook;
+		portfolio.instagram;
+		await portfolio.save()
+		return res.status(200).send(portfolio)
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
 
 
 
