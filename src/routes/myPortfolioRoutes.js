@@ -326,7 +326,7 @@ router.put("/contactinfo", async(req,res)=>{
 		portfolio.email=email;
 		portfolio.phone=phone;
 		portfolio.facebook=facebook;
-		portfolio.instagram;
+		portfolio.instagram=instagram;
 		await portfolio.save()
 		return res.status(200).send(portfolio)
 	}catch(err){
