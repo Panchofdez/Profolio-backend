@@ -13,10 +13,10 @@ router.get("/", requireAuth , async (req,res)=>{
 	try{
 		if(req.query.search){
 			const regex = new RegExp(escapeRegex(req.query.search), 'gi')
-			const portfolios = await Portfolio.find({$text:{$search:regex}});
+			const portfolios = await Portfolio.find({$text:{$search:regex}})
 			return res.status(200).send(portfolios);
 		}else{
-			const portfolios = await Portfolio.find({});
+			const portfolios = await Portfolio.find({})
 			return res.status(200).send(portfolios);
 		}
 	}catch(err){
@@ -28,7 +28,9 @@ router.get("/", requireAuth , async (req,res)=>{
 
 router.get("/:id",async (req,res)=>{
 	try{
-		const portfolio = await Portfolio.findById(req.params.id).populate('comments');						
+		const portfolio = await Portfolio.findById(req.params.id)
+		await portfolio.populate('comments').execPopulate();	
+		console.log(portfolio);					
 		return res.status(200).send(portfolio);
 	}catch(err){
 		console.log(err.message);
@@ -40,8 +42,12 @@ router.get("/:id",async (req,res)=>{
 
 router.post("/:id/comments", requireAuth, async (req,res)=>{
 	try{
-		const userPortfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments')
-		const portfolio = await Portfolio.findById(req.params.id).populate('comments')
+		const userPortfolio = await Portfolio.findOne({userId:req.user._id})
+		if(!userPortfolio){
+			console.log('error');
+			return res.status(400).send({error:"You must create a portfolio first"});
+		}
+		const portfolio = await Portfolio.findById(req.params.id)
 		if(portfolio._id.equals(userPortfolio._id)){
 			return res.status(400).send({error:"You can't comment on your own portfolio"});
 		}
@@ -49,13 +55,12 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 			text:req.body.text,
 			author:{
 				id:req.user._id,
-				name:userPortfolio.name,
+				name:req.user.name,
 				profileImage:userPortfolio.profileImage
 			}
 		});
 		await comment.save();
-		
-		portfolio.comments.push(comment);
+		portfolio.comments.push(comment._id);
 		await portfolio.save();
 		const user = await User.findOne({portfolio:req.params.id});
 		const notification ={
@@ -65,7 +70,7 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 		}
 		user.notifications.push(notification);
 		await user.save();
-		console.log(portfolio);
+		await portfolio.populate('comments').execPopulate();
 		return res.status(200).send(portfolio);
 	
 		
@@ -77,11 +82,13 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 
 router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 	try{
+
 		const comment = await Comment.findOne({_id:req.params.comment_id});
 		if(!comment.author.id.equals(req.user._id)){
 			return res.status(400).send({error:"You can't delete other user's comments"});
 		}
-		const portfolio = await Portfolio.findById(req.params.id).populate('comments')
+		const portfolio = await Portfolio.findById(req.params.id)
+		await portfolio.populate('comments').execPopulate();
 		portfolio.comments.remove(req.params.comment_id);
 		await portfolio.save();		
 		await comment.remove();
@@ -93,7 +100,6 @@ router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 		}
 		user.notifications.push(notification);
 		await user.save();
-		console.log(portfolio)
 		return res.status(200).send(portfolio);
 
 	}catch(err){
@@ -103,11 +109,10 @@ router.delete('/:id/comments/:comment_id', requireAuth, async (req,res)=>{
 
 router.post('/:id/recommend', requireAuth, async(req,res)=>{
 	try{
-		const portfolio = await Portfolio.findById(req.params.id);
+		const portfolio = await Portfolio.findById(req.params.id)
+		await portfolio.populate('comments').execPopulate();
 		const currentUser = await User.findById(req.user._id);
-		console.log(portfolio.recommendations)
 		const isSupporting = portfolio.recommendations.find((id)=>id.equals(req.user._id));
-		console.log(isSupporting);
 		if(portfolio.userId.equals(req.user._id)){
 			return res.status(400).send({error:"You can't recommend yourself"});
 		}
@@ -126,9 +131,8 @@ router.post('/:id/recommend', requireAuth, async(req,res)=>{
 		}
 		user.notifications.push(notification);
 		await user.save();
-		console.log(portfolio);
-		console.log(user)
 		return res.status(200).send(portfolio);	
+
 	}catch(err){
 		return res.status(400).send({error:err.message});
 	}
@@ -137,7 +141,8 @@ router.post('/:id/recommend', requireAuth, async(req,res)=>{
 
 router.post('/:id/unrecommend', requireAuth, async(req, res)=>{
 	try{
-		const portfolio = await Portfolio.findById(req.params.id);
+		const portfolio = await Portfolio.findById(req.params.id)
+		await portfolio.populate('comments').execPopulate();
 		const currentUser = await User.findById(req.user._id);
 		const recommendations = portfolio.recommendations.filter((id)=>!id.equals(req.user._id));
 		portfolio.recommendations = recommendations;
@@ -162,8 +167,10 @@ router.post('/:id/unrecommend', requireAuth, async(req, res)=>{
 
 router.get('/:id/recommendations', async(req, res)=>{
 	try{
-		const portfolio = await Portfolio.findById(req.params.id).populate('recommendations');
-		const user = await User.findById(portfolio.userId).populate('recommending');
+		const portfolio = await Portfolio.findById(req.params.id)
+		await portfolio.populate('recommendations').execPopulate();
+		const user = await User.findById(portfolio.userId)
+		await user.populate('recommending').execPopulate();
 		console.log(portfolio.recommendations);
 		console.log(user.recommending)
 		return res.status(200).send({recommendations:portfolio.recommendations, recommending:user.recommending});

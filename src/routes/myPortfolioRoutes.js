@@ -35,7 +35,8 @@ router.use(requireAuth);
 
 router.get("/", async (req, res)=>{
 	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('comments');
+		const portfolio = await Portfolio.findOne({userId:req.user._id})
+		await portfolio.populate('comments').execPopulate();
 		return res.status(200).send(portfolio);
 	}catch(err){
 		console.log(err);
@@ -163,6 +164,7 @@ router.put('/timeline/:id', async (req,res)=>{
 
 router.delete('/timeline/:id', async (req, res)=>{
 	try{
+		console.log('hello');
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		const timeline = portfolio.timeline.filter((post)=>post._id!=req.params.id);
 		portfolio.timeline=timeline;
@@ -334,6 +336,61 @@ router.put("/contactinfo", async(req,res)=>{
 	}
 })
 
+
+router.post("/create", async(req,res)=>{
+	try{
+		const user = await User.findById(req.user._id);
+		user.profileImage=req.body.profileImage;
+		const portfolio = new Portfolio({userId:req.user._id, ...req.body});
+		await portfolio.save();		
+		user.portfolio = portfolio._id;
+		await user.save();
+		return res.status(200).send(portfolio);
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
+
+router.put("/edit/profile", async (req, res)=>{
+	try{
+		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
+		const user = await User.findById(req.user._id);
+		const {headerImage,headerImageId, name, profileImage, profileImageId} = req.body;
+		if(profileImage && profileImage !== portfolio.profileImage){
+			await cloudinary.v2.uploader.destroy(portfolio.profileImageId);
+			portfolio.profileImage=profileImage;
+			portfolio.profileImageId=profileImageId;
+			user.profileImage=profileImage
+		}
+		if(headerImage && headerImage !== portfolio.headerImage){
+			await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
+			portfolio.headerImage=headerImage;
+			portfolio.headerImageId=headerImageId;
+		}
+		portfolio.name=name;
+		await portfolio.save();
+		await user.save();
+		return res.status(200).send(portfolio);
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
+
+
+router.put("/edit/about", async (req, res)=>{
+	try{
+		const {location, type, birthday, about} = req.body;
+		const portfolio = await Portfolio.findOne({userId:req.user._id});		
+		portfolio.location = location;
+		portfolio.type = type;		
+		portfolio.birthday=birthday;
+		portfolio.about =about;
+		await portfolio.save();
+		return res.send(portfolio);
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
 
 
 module.exports=router;

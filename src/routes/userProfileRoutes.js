@@ -12,7 +12,7 @@ router.get("/user", async (req, res)=>{
 	try{
 		const user = await User.findById(req.user._id);
 		const notifications = user.notifications.filter((n)=>n.read===false);
-		res.status(200).send({userId:user._id, name:user.name, profileImage:user.profileImage, notifications});
+		res.status(200).send({userId:user._id, name:user.name, profileImage:user.profileImage, notifications, portfolio:user.portfolio});
 	}catch(err){
 		return res.status(400).send({error:err.message});
 	}
