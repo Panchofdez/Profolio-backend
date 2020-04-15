@@ -73,7 +73,8 @@ router.post("/profile", async (req,res)=>{
 
 router.put("/profile", async (req, res)=>{
 	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
+		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate(); 
 		const user = await User.findById(req.user._id);
 		const {type, location, birthday,name, profileImage, profileImageId} = req.body;
 		if(profileImage){
@@ -97,7 +98,8 @@ router.put("/profile", async (req, res)=>{
 router.post("/about",async (req,res)=>{
 	try{
 		const {statement, about, headerImage, headerImageId} = req.body;
-		const portfolio = await Portfolio.findOne({userId:req.user._id});		
+		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();		
 		portfolio.headerImage = headerImage;
 		portfolio.headerImageId = headerImageId;		
 		portfolio.statement=statement;
@@ -115,6 +117,7 @@ router.put("/about", async (req,res)=>{
 		console.log(req.body);
 		const {about,statement, headerImage, headerImageId}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		if(headerImage){
 			if(portfolio.headerImageId){
 				await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
@@ -136,6 +139,7 @@ router.put("/about", async (req,res)=>{
 router.post('/timeline', async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		portfolio.timeline.push(req.body.post)
 		await portfolio.save();
 		return res.status(200).send(portfolio);
@@ -148,6 +152,7 @@ router.post('/timeline', async (req, res)=>{
 router.put('/timeline/:id', async (req,res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const newTimeline = portfolio.timeline.map((post)=>{
 			if(post._id==req.params.id){
 				post=req.body.post;
@@ -166,6 +171,7 @@ router.delete('/timeline/:id', async (req, res)=>{
 	try{
 		console.log('hello');
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const timeline = portfolio.timeline.filter((post)=>post._id!=req.params.id);
 		portfolio.timeline=timeline;
 		await portfolio.save();
@@ -180,6 +186,7 @@ router.delete('/timeline/:id', async (req, res)=>{
 router.post('/videos', async (req,res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		portfolio.videos.push(req.body.video);
 		await portfolio.save();
 		return res.status(200).send(portfolio);
@@ -190,8 +197,10 @@ router.post('/videos', async (req,res)=>{
 
 router.put('/videos/:id', async (req,res)=>{
 	try{
+		console.log(req.body);
 		const {title, description, link} = req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const videos = portfolio.videos.map((video)=>{
 			if(video._id==req.params.id){
 				video.title=title;
@@ -202,6 +211,7 @@ router.put('/videos/:id', async (req,res)=>{
 		});
 		portfolio.videos = videos;
 		await portfolio.save();
+		console.log(portfolio);
 		return res.status(200).send(portfolio);
 
 	}catch(err){
@@ -213,6 +223,7 @@ router.put('/videos/:id', async (req,res)=>{
 router.delete('/videos/:id', async (req,res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const videos = portfolio.videos.filter((video)=>video._id!=req.params.id);
 		portfolio.videos = videos;
 		await portfolio.save();
@@ -224,7 +235,6 @@ router.delete('/videos/:id', async (req,res)=>{
 
 router.post("/collections", async (req,res)=>{
 	try{
-		console.log(req.body);
 		const {image, imageId, title, description} = req.body;
 		const photos =[];
 		if(image){
@@ -234,12 +244,10 @@ router.post("/collections", async (req,res)=>{
 				imageId
 			})
 		}
-		
-		console.log(photos)
 		const portfolio= await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		portfolio.collections.push({title,description, photos});
 		await portfolio.save();
-		console.log(portfolio)
 		return res.status(200).send(portfolio);	
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -249,6 +257,7 @@ router.post("/collections", async (req,res)=>{
 router.delete("/collections/:id", async(req,res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const collection = portfolio.collections.find((collection)=>collection._id==req.params.id);
 		collection.photos.forEach(async(photo)=>{
 			try{
@@ -270,6 +279,7 @@ router.delete("/collections/:id/photos/:photo_id", async(req,res)=>{
 	try{
 		const id = `panchofdez/${req.params.photo_id}`
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const collections = portfolio.collections.map((collection)=>{
 			if(collection._id==req.params.id){
 				if(collection.photos.length===1){
@@ -295,14 +305,13 @@ router.put("/collections/:id", async(req,res)=>{
 		const {image, imageId, title, description} = req.body;
 		const photos =[]
 		if(image){
-			console.log('Hello');
 			photos.push({
 				image,
 				imageId
 			})
 		}
-		console.log(photos);
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		const collections = portfolio.collections.map((collection)=>{
 			if(collection._id==req.params.id){
 				collection.title=title;
@@ -312,7 +321,7 @@ router.put("/collections/:id", async(req,res)=>{
 			return collection;
 		})
 		portfolio.collections=collections;
-		portfolio.save();
+		await portfolio.save();
 		console.log(portfolio);
 		return res.status(200).send(portfolio);
 	}catch(err){
@@ -325,6 +334,7 @@ router.put("/contactinfo", async(req,res)=>{
 	try{
 		const {email, phone, facebook, instagram} = req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		await portfolio.populate('comments').execPopulate();
 		portfolio.email=email;
 		portfolio.phone=phone;
 		portfolio.facebook=facebook;
@@ -354,6 +364,7 @@ router.post("/create", async(req,res)=>{
 router.put("/edit/profile", async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
+		await portfolio.populate('comments').execPopulate();
 		const user = await User.findById(req.user._id);
 		const {headerImage,headerImageId, name, profileImage, profileImageId} = req.body;
 		if(profileImage && profileImage !== portfolio.profileImage){
@@ -380,7 +391,8 @@ router.put("/edit/profile", async (req, res)=>{
 router.put("/edit/about", async (req, res)=>{
 	try{
 		const {location, type, birthday, about} = req.body;
-		const portfolio = await Portfolio.findOne({userId:req.user._id});		
+		const portfolio = await Portfolio.findOne({userId:req.user._id});	
+		await portfolio.populate('comments').execPopulate();	
 		portfolio.location = location;
 		portfolio.type = type;		
 		portfolio.birthday=birthday;
