@@ -57,44 +57,6 @@ router.get('/recommendations', async(req, res)=>{
 	}
 })
 
-router.post("/profile", async (req,res)=>{
-	try{
-		const user = await User.findById(req.user._id);
-		user.profileImage=req.body.profileImage;
-		const portfolio = new Portfolio({userId:req.user._id, ...req.body});
-		await portfolio.save();		
-		user.portfolio = portfolio._id;
-		await user.save();
-		return res.status(200).send(portfolio);
-	}catch(err){
-		return res.status(400).send({error:err.message});
-	}
-})
-
-router.put("/profile", async (req, res)=>{
-	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id});
-		await portfolio.populate('comments').execPopulate(); 
-		const user = await User.findById(req.user._id);
-		const {type, location, birthday,name, profileImage, profileImageId} = req.body;
-		if(profileImage){
-			await cloudinary.v2.uploader.destroy(portfolio.profileImageId);
-			portfolio.profileImage=profileImage;
-			portfolio.profileImageId=profileImageId;
-			user.profileImage=profileImage
-		}
-		portfolio.type=type;
-		portfolio.location=location;
-		portfolio.birthday=birthday;
-		portfolio.name=name;
-		await portfolio.save();
-		await user.save();
-		return res.status(200).send(portfolio);
-	}catch(err){
-		return res.status(400).send({error:err.message});
-	}
-})
-
 router.post("/about",async (req,res)=>{
 	try{
 		const {statement, about, headerImage, headerImageId} = req.body;
@@ -114,7 +76,6 @@ router.post("/about",async (req,res)=>{
 
 router.put("/about", async (req,res)=>{
 	try{
-		console.log(req.body);
 		const {about,statement, headerImage, headerImageId}=req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		await portfolio.populate('comments').execPopulate();
@@ -169,7 +130,6 @@ router.put('/timeline/:id', async (req,res)=>{
 
 router.delete('/timeline/:id', async (req, res)=>{
 	try{
-		console.log('hello');
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		await portfolio.populate('comments').execPopulate();
 		const timeline = portfolio.timeline.filter((post)=>post._id!=req.params.id);
@@ -197,7 +157,6 @@ router.post('/videos', async (req,res)=>{
 
 router.put('/videos/:id', async (req,res)=>{
 	try{
-		console.log(req.body);
 		const {title, description, link} = req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		await portfolio.populate('comments').execPopulate();
@@ -211,7 +170,6 @@ router.put('/videos/:id', async (req,res)=>{
 		});
 		portfolio.videos = videos;
 		await portfolio.save();
-		console.log(portfolio);
 		return res.status(200).send(portfolio);
 
 	}catch(err){
@@ -322,7 +280,6 @@ router.put("/collections/:id", async(req,res)=>{
 		})
 		portfolio.collections=collections;
 		await portfolio.save();
-		console.log(portfolio);
 		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
@@ -347,7 +304,7 @@ router.put("/contactinfo", async(req,res)=>{
 })
 
 
-router.post("/create", async(req,res)=>{
+router.post("/profile", async(req,res)=>{
 	try{
 		const user = await User.findById(req.user._id);
 		user.profileImage=req.body.profileImage;
@@ -361,7 +318,7 @@ router.post("/create", async(req,res)=>{
 	}
 })
 
-router.put("/edit/profile", async (req, res)=>{
+router.put("/profile", async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id}); 
 		await portfolio.populate('comments').execPopulate();
@@ -398,7 +355,21 @@ router.put("/edit/about", async (req, res)=>{
 		portfolio.birthday=birthday;
 		portfolio.about =about;
 		await portfolio.save();
-		return res.send(portfolio);
+		return res.status(200).send(portfolio);
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
+
+
+router.post("/skills", async (req,res)=>{
+	try{
+		const portfolio = await Portfolio.findOne({userId:req.user._id});
+		portfolio.skills = req.body.skills;
+		await portfolio.save();
+		console.log(portfolio.skills);
+		await portfolio.populate('comments').execPopulate();
+		return res.status(200).send(portfolio);
 	}catch(err){
 		return res.status(400).send({error:err.message});
 	}

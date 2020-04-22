@@ -40,6 +40,7 @@ const portfolioSchema = new mongoose.Schema({
 	type:String,
 	name:String,
 	about:String,
+	skills:[String],
 	headerImage:String,
 	headerImageId:String,
 	statement:String,

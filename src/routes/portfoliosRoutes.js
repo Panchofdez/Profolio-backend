@@ -29,8 +29,7 @@ router.get("/", requireAuth , async (req,res)=>{
 router.get("/:id",async (req,res)=>{
 	try{
 		const portfolio = await Portfolio.findById(req.params.id)
-		await portfolio.populate('comments').execPopulate();	
-		console.log(portfolio);					
+		await portfolio.populate('comments').execPopulate();					
 		return res.status(200).send(portfolio);
 	}catch(err){
 		console.log(err.message);
@@ -56,7 +55,8 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 			author:{
 				id:req.user._id,
 				name:req.user.name,
-				profileImage:userPortfolio.profileImage
+				profileImage:userPortfolio.profileImage,
+				portfolio:userPortfolio._id
 			}
 		});
 		await comment.save();
@@ -66,11 +66,13 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 		const notification ={
 			text:`${req.user.name} commented on your portfolio!`,
 			portfolio:req.user.portfolio,
-			profileImage:req.user.profileImage
+			profileImage:req.user.profileImage,
+			comment:comment._id
 		}
 		user.notifications.push(notification);
 		await user.save();
 		await portfolio.populate('comments').execPopulate();
+		console.log(comment);
 		return res.status(200).send(portfolio);
 	
 		
@@ -171,8 +173,6 @@ router.get('/:id/recommendations', async(req, res)=>{
 		await portfolio.populate('recommendations').execPopulate();
 		const user = await User.findById(portfolio.userId)
 		await user.populate('recommending').execPopulate();
-		console.log(portfolio.recommendations);
-		console.log(user.recommending)
 		return res.status(200).send({recommendations:portfolio.recommendations, recommending:user.recommending});
 	}catch(err){
 		return res.status(400).send({error:err.message});

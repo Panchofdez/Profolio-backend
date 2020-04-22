@@ -10,7 +10,11 @@ const commentSchema= new mongoose.Schema({
 			ref:'User'
 		},
 		name:String,
-		profileImage: String
+		profileImage: String,
+		portfolio:{
+			type:mongoose.Schema.Types.ObjectId,
+			ref:'Portfolio'
+		}
 	}
 });
 

@@ -18,13 +18,9 @@ router.get("/user", async (req, res)=>{
 	}
 });
 
-router.put("/notifications/:id", async(req,res)=>{
+router.put("user/notifications/:id", async(req,res)=>{
 	try{
-		console.log(req.user._id);
-		console.log(req.params.id);
 		const user = await User.findById(req.user._id);
-		console.log(user);
-		console.log(user.notifications);
 		const notifications = user.notifications.map((n)=>{
 			if(n._id.equals(req.params.id)){
 				n.read=true;
@@ -32,7 +28,6 @@ router.put("/notifications/:id", async(req,res)=>{
 			return n;
 		});
 		user.notifications = notifications;
-		console.log(user.notifications);
 		await user.save();
 		const unread = user.notifications.filter((n)=>n.read===false);
 		res.status(200).send({userId:user._id, name:user.name, profileImage:user.profileImage, notifications:unread});
@@ -40,7 +35,7 @@ router.put("/notifications/:id", async(req,res)=>{
 		res.status(400).send({error:err.message});
 	}
 })
-router.put("/notifications", async(req,res)=>{
+router.put("user/notifications", async(req,res)=>{
 	try{	
 		const user = await User.findById(req.user._id);
 		const notifications = user.notifications.map((n)=>{
@@ -50,7 +45,6 @@ router.put("/notifications", async(req,res)=>{
 			return n;
 		})
 		user.notifications = notifications;
-		console.log(user.notifications);
 		await user.save();
 		const unread = user.notifications.filter((n)=>n.read===false);
 		res.status(200).send({userId:user._id, name:user.name, profileImage:user.profileImage, notifications:unread})
@@ -75,6 +69,44 @@ router.delete("/notifications/:id", async(req,res)=>{
 		user.notifications = notifications;
 		await user.save();
 		return res.status(200).send(user.notifications);
+	}catch(err){
+		return res.status(400).send({error:err.message});
+	}
+})
+
+
+
+router.put("/notifications/notification/:id", async(req,res)=>{
+	try{
+		const user = await User.findById(req.user._id);
+		const notifications = user.notifications.map((n)=>{
+			if(n._id.equals(req.params.id)){
+				n.read=true;
+			}
+			return n;
+		});
+		user.notifications = notifications;
+		await user.save();
+		
+		res.status(200).send(user.notifications);
+	}catch(err){
+		res.status(400).send({error:err.message});
+	}
+})
+
+
+router.put("/notifications/readall", async(req,res)=>{
+	try{	
+		const user = await User.findById(req.user._id);
+		const notifications = user.notifications.map((n)=>{
+			if(n.read===false){
+				n.read=true;
+			}
+			return n;
+		})
+		user.notifications = notifications;
+		await user.save();
+		res.status(200).send(user.notifications)
 	}catch(err){
 		return res.status(400).send({error:err.message});
 	}

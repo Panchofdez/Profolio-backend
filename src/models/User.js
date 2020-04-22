@@ -9,6 +9,10 @@ const notificationSchema = new mongoose.Schema({
 	portfolio:{
 		type:mongoose.Schema.Types.ObjectId,
 		ref:'Portfolio'
+	},
+	comment:{
+		type:mongoose.Schema.Types.ObjectId,
+		ref:'Comment'
 	}
 
 })
