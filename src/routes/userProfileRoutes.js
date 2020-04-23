@@ -18,7 +18,7 @@ router.get("/user", async (req, res)=>{
 	}
 });
 
-router.put("user/notifications/:id", async(req,res)=>{
+router.put("/user/notifications/:id", async(req,res)=>{
 	try{
 		const user = await User.findById(req.user._id);
 		const notifications = user.notifications.map((n)=>{
@@ -35,7 +35,7 @@ router.put("user/notifications/:id", async(req,res)=>{
 		res.status(400).send({error:err.message});
 	}
 })
-router.put("user/notifications", async(req,res)=>{
+router.put("/user/notifications", async(req,res)=>{
 	try{	
 		const user = await User.findById(req.user._id);
 		const notifications = user.notifications.map((n)=>{

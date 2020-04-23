@@ -72,7 +72,6 @@ router.post("/:id/comments", requireAuth, async (req,res)=>{
 		user.notifications.push(notification);
 		await user.save();
 		await portfolio.populate('comments').execPopulate();
-		console.log(comment);
 		return res.status(200).send(portfolio);
 	
 		

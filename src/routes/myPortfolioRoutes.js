@@ -45,57 +45,6 @@ router.get("/", async (req, res)=>{
 	
 });
 
-router.get('/recommendations', async(req, res)=>{
-	try{
-		const portfolio = await Portfolio.findOne({userId:req.user._id}).populate('recommendations');
-		const user = await User.findById(req.user._id).populate('recommending');
-		console.log(portfolio.recommendations);
-		console.log(user.recommending);
-		return res.status(200).send({recommendations:portfolio.recommendations, recommending:user.recommending});
-	}catch(err){
-		return res.status(400).send({error:err.message});
-	}
-})
-
-router.post("/about",async (req,res)=>{
-	try{
-		const {statement, about, headerImage, headerImageId} = req.body;
-		const portfolio = await Portfolio.findOne({userId:req.user._id});
-		await portfolio.populate('comments').execPopulate();		
-		portfolio.headerImage = headerImage;
-		portfolio.headerImageId = headerImageId;		
-		portfolio.statement=statement;
-		portfolio.about =about;
-		await portfolio.save();
-		return res.send(portfolio);
-	}catch(err){
-		return res.status(400).send({error:err.message});
-	}
-	
-});
-
-router.put("/about", async (req,res)=>{
-	try{
-		const {about,statement, headerImage, headerImageId}=req.body;
-		const portfolio = await Portfolio.findOne({userId:req.user._id});
-		await portfolio.populate('comments').execPopulate();
-		if(headerImage){
-			if(portfolio.headerImageId){
-				await cloudinary.v2.uploader.destroy(portfolio.headerImageId);
-			}
-			portfolio.headerImage=headerImage;
-			portfolio.headerImageId=headerImageId;
-		}		
-		portfolio.about=about;
-		portfolio.statement=statement;
-		await portfolio.save();
-		return res.status(200).send(portfolio);
-	}catch(err){
-		return res.status(400).send({error:err.message});
-	}
-})
-
-
 
 router.post('/timeline', async (req, res)=>{
 	try{
@@ -130,11 +79,14 @@ router.put('/timeline/:id', async (req,res)=>{
 
 router.delete('/timeline/:id', async (req, res)=>{
 	try{
+		console.log(req.params.id);
+		console.log('HELLO');
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		await portfolio.populate('comments').execPopulate();
 		const timeline = portfolio.timeline.filter((post)=>post._id!=req.params.id);
 		portfolio.timeline=timeline;
 		await portfolio.save();
+		console.log(timeline);
 		return res.status(200).send(portfolio);
 
 	}catch(err){
@@ -235,18 +187,20 @@ router.delete("/collections/:id", async(req,res)=>{
 
 router.delete("/collections/:id/photos/:photo_id", async(req,res)=>{
 	try{
+		console.log(req.params.photo_id);
 		const id = `panchofdez/${req.params.photo_id}`
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		await portfolio.populate('comments').execPopulate();
 		const collections = portfolio.collections.map((collection)=>{
 			if(collection._id==req.params.id){
 				if(collection.photos.length===1){
-					return res.status(400).send({error:err.message});
+					return res.status(400).send({error:'Collection must have at least one photo'});
 				}
 				collection.photos = collection.photos.filter((photo)=>photo.imageId!=id);
 			}
 			return collection;
 		});
+		console.log(collections);
 		portfolio.collections = collections;
 		await portfolio.save();
 		await cloudinary.v2.uploader.destroy(`panchofdez/${req.params.photo_id}`);
@@ -345,7 +299,7 @@ router.put("/profile", async (req, res)=>{
 })
 
 
-router.put("/edit/about", async (req, res)=>{
+router.put("/about", async (req, res)=>{
 	try{
 		const {location, type, birthday, about} = req.body;
 		const portfolio = await Portfolio.findOne({userId:req.user._id});	
@@ -367,7 +321,6 @@ router.post("/skills", async (req,res)=>{
 		const portfolio = await Portfolio.findOne({userId:req.user._id});
 		portfolio.skills = req.body.skills;
 		await portfolio.save();
-		console.log(portfolio.skills);
 		await portfolio.populate('comments').execPopulate();
 		return res.status(200).send(portfolio);
 	}catch(err){
