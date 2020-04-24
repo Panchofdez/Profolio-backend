@@ -36,7 +36,9 @@ router.use(requireAuth);
 router.get("/", async (req, res)=>{
 	try{
 		const portfolio = await Portfolio.findOne({userId:req.user._id})
-		await portfolio.populate('comments').execPopulate();
+		if(portfolio){
+			await portfolio.populate('comments').execPopulate();
+		}
 		return res.status(200).send(portfolio);
 	}catch(err){
 		console.log(err);
