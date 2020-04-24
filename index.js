@@ -30,14 +30,10 @@ mongoose.connection.on('connected', ()=>{
 mongoose.connection.on('error', (err)=>{
 	console.error("Error connecting to mongo db", err);
 })
-
+app.use(cors());
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "https://portfolio-app-frontend-pf.herokuapp.com"); 
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+
 
 app.get('/', (req, res)=>{
 	res.send('Hello');;
