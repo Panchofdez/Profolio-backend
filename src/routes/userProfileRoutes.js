@@ -29,7 +29,7 @@ router.put("/user/notifications/:id", async(req,res)=>{
 		});
 		user.notifications = notifications;
 		await user.save();
-		const unread = user.notifications.filter((n)=>n.read===false);
+		const unread = user.notifications.filter((n)=>n.read===false);	
 		res.status(200).send({userId:user._id, name:user.name, profileImage:user.profileImage, notifications:unread});
 	}catch(err){
 		res.status(400).send({error:err.message});
@@ -111,6 +111,7 @@ router.put("/notifications/readall", async(req,res)=>{
 		return res.status(400).send({error:err.message});
 	}
 })
+
 
 
 module.exports = router;
