@@ -52,7 +52,7 @@ router.post('/signin', async (req,res)=>{
 router.post('/facebooklogin', (req, res)=>{
 	const {accessToken, userId} = req.body;
 	let urlGraphFacebook;
-	if(!userId){
+	if(userId===null){
 		urlGraphFacebook = `https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=${accessToken}`;
 	}else{
 		urlGraphFacebook = `https://graph.facebook.com/v7.0/${userId}/?fields=id,name,email&access_token=${accessToken}`;
@@ -91,6 +91,9 @@ router.post('/facebooklogin', (req, res)=>{
     			}
     		}
     	});
+    })
+    .catch((err)=>{
+    	return res.status(400).json({error:err});
     })
 })
 
