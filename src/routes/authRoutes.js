@@ -51,8 +51,12 @@ router.post('/signin', async (req,res)=>{
 
 router.post('/facebooklogin', (req, res)=>{
 	const {accessToken, userId} = req.body;
-
-	let urlGraphFacebook = `https://graph.facebook.com/v7.0/${userId}/?fields=id,name,email&access_token=${accessToken}`;
+	let urlGraphFacebook;
+	if(!userId){
+		urlGraphFacebook = `https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=${accessToken}`;
+	}else{
+		urlGraphFacebook = `https://graph.facebook.com/v7.0/${userId}/?fields=id,name,email&access_token=${accessToken}`;
+	}	
 	fetch(urlGraphFacebook,{
 		method:'GET'
 	})
