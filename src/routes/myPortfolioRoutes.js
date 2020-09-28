@@ -49,7 +49,7 @@ router.get("/", async (req, res) => {
     portfolio = portfolio.toObject(portfolio);
     user = user.toObject(user);
     portfolio = { ...portfolio, recommending: user.recommending };
-    return res.status(200).send(portfolio);
+    return res.status(200).json(portfolio);
   } catch (err) {
     console.log(err);
     return res.status(400).send({ error: err.message });

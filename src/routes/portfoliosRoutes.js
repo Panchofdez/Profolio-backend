@@ -6,7 +6,7 @@ const User = mongoose.model("User");
 const Comment = mongoose.model("Comment");
 const requireAuth = require("../middleware/requireAuth");
 
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   //retrieves all portfolios
   try {
     if (req.query.search) {
@@ -38,7 +38,7 @@ router.get("/:id", async (req, res) => {
     portfolio = portfolio.toObject(portfolio);
     user = user.toObject(user);
     portfolio = { ...portfolio, recommending: user.recommending };
-    return res.status(200).send(portfolio);
+    return res.status(200).json(portfolio);
   } catch (err) {
     console.log(err.message);
     return res.status(400).send({ error: err.message });
