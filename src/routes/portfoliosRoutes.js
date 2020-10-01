@@ -31,14 +31,9 @@ router.get("/:id", async (req, res) => {
       .populate("comments")
       .populate("recommendations", "portfolio profileImage name")
       .execPopulate();
-    let user = await User.findById(portfolio.userId);
-    await user
-      .populate("recommending", "portfolio profileImage name")
-      .execPopulate();
-    portfolio = portfolio.toObject(portfolio);
-    user = user.toObject(user);
-    portfolio = { ...portfolio, recommending: user.recommending };
-    return res.status(200).json(portfolio);
+
+    const response = await formatUserObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     console.log(err.message);
     return res.status(400).send({ error: err.message });
@@ -82,8 +77,12 @@ router.post("/:id/comments", requireAuth, async (req, res) => {
     };
     user.notifications.push(notification);
     await user.save();
-    await portfolio.populate("comments").execPopulate();
-    return res.status(200).send(portfolio);
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
+    const response = await formatUserObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -99,7 +98,10 @@ router.delete("/:id/comments/:comment_id", requireAuth, async (req, res) => {
         .send({ error: "You can't delete other user's comments" });
     }
     const portfolio = await Portfolio.findById(req.params.id);
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     portfolio.comments.remove(req.params.comment_id);
     await portfolio.save();
     await comment.remove();
@@ -111,7 +113,8 @@ router.delete("/:id/comments/:comment_id", requireAuth, async (req, res) => {
     };
     user.notifications.push(notification);
     await user.save();
-    return res.status(200).send(portfolio);
+    const response = await formatUserObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -121,7 +124,10 @@ router.post("/:id/recommend", requireAuth, async (req, res) => {
   //allows a user to recommend another user
   try {
     const portfolio = await Portfolio.findById(req.params.id);
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const currentUser = await User.findById(req.user._id);
     const isSupporting = portfolio.recommendations.find((id) =>
       id.equals(req.user._id)
@@ -146,7 +152,8 @@ router.post("/:id/recommend", requireAuth, async (req, res) => {
     };
     user.notifications.push(notification);
     await user.save();
-    return res.status(200).send(portfolio);
+    const response = await formatUserObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -156,7 +163,10 @@ router.post("/:id/unrecommend", requireAuth, async (req, res) => {
   //allows a user to stop recommending another
   try {
     const portfolio = await Portfolio.findById(req.params.id);
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const currentUser = await User.findById(req.user._id);
     const recommendations = portfolio.recommendations.filter(
       (id) => !id.equals(req.user._id)
@@ -176,7 +186,8 @@ router.post("/:id/unrecommend", requireAuth, async (req, res) => {
     };
     user.notifications.push(notification);
     await user.save();
-    return res.status(200).send(portfolio);
+    const response = await formatUserObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -198,8 +209,17 @@ router.get("/:id/recommendations", async (req, res) => {
   }
 });
 
-function escapeRegex(text) {
+const escapeRegex = (text) => {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-}
+};
+
+const formatUserObject = async (portfolio) => {
+  //adds user recommending info to the portfolio response object
+  let user = await User.findById(portfolio.userId);
+  await user
+    .populate("recommending", "portfolio profileImage name")
+    .execPopulate();
+  return { ...portfolio.toObject(), recommending: [...user.recommending] };
+};
 
 module.exports = router;
