@@ -42,14 +42,8 @@ router.get("/", async (req, res) => {
         .populate("recommendations", "portfolio profileImage name")
         .execPopulate();
     }
-    let user = await User.findById(portfolio.userId);
-    await user
-      .populate("recommending", "portfolio profileImage name")
-      .execPopulate();
-    portfolio = portfolio.toObject(portfolio);
-    user = user.toObject(user);
-    portfolio = { ...portfolio, recommending: user.recommending };
-    return res.status(200).json(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).json(response);
   } catch (err) {
     console.log(err);
     return res.status(400).send({ error: err.message });
@@ -60,10 +54,14 @@ router.post("/timeline", async (req, res) => {
   //Add's a post to a user's timeline
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     portfolio.timeline.push(req.body.post);
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -73,7 +71,10 @@ router.put("/timeline/:id", async (req, res) => {
   //updates a user's particular post in their timeline
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const newTimeline = portfolio.timeline.map((post) => {
       if (post._id == req.params.id) {
         post = req.body.post;
@@ -82,7 +83,8 @@ router.put("/timeline/:id", async (req, res) => {
     });
     portfolio.timeline = newTimeline;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -92,13 +94,17 @@ router.delete("/timeline/:id", async (req, res) => {
   //deletes a post from the timeline
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const timeline = portfolio.timeline.filter(
       (post) => post._id != req.params.id
     );
     portfolio.timeline = timeline;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -108,10 +114,14 @@ router.post("/videos", async (req, res) => {
   // Adds a video to a user's portfolio
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     portfolio.videos.push(req.body.video);
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -122,7 +132,10 @@ router.put("/videos/:id", async (req, res) => {
   try {
     const { title, description, link } = req.body;
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const videos = portfolio.videos.map((video) => {
       if (video._id == req.params.id) {
         video.title = title;
@@ -133,7 +146,8 @@ router.put("/videos/:id", async (req, res) => {
     });
     portfolio.videos = videos;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -143,13 +157,17 @@ router.delete("/videos/:id", async (req, res) => {
   //deletes a video
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const videos = portfolio.videos.filter(
       (video) => video._id != req.params.id
     );
     portfolio.videos = videos;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -167,10 +185,14 @@ router.post("/collections", async (req, res) => {
       });
     }
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     portfolio.collections.push({ title, description, photos });
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -180,7 +202,10 @@ router.delete("/collections/:id", async (req, res) => {
   //deletes an entire collection
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const collection = portfolio.collections.find(
       (collection) => collection._id == req.params.id
     );
@@ -196,7 +221,8 @@ router.delete("/collections/:id", async (req, res) => {
     );
     portfolio.collections = collections;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -207,7 +233,10 @@ router.delete("/collections/:id/photos/:photo_id", async (req, res) => {
   try {
     const id = `panchofdez/${req.params.photo_id}`;
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const collections = portfolio.collections.map((collection) => {
       if (collection._id == req.params.id) {
         if (collection.photos.length === 1) {
@@ -224,7 +253,8 @@ router.delete("/collections/:id/photos/:photo_id", async (req, res) => {
     portfolio.collections = collections;
     await portfolio.save();
     await cloudinary.v2.uploader.destroy(`panchofdez/${req.params.photo_id}`);
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -242,7 +272,10 @@ router.put("/collections/:id", async (req, res) => {
       });
     }
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const collections = portfolio.collections.map((collection) => {
       if (collection._id == req.params.id) {
         collection.title = title;
@@ -253,7 +286,8 @@ router.put("/collections/:id", async (req, res) => {
     });
     portfolio.collections = collections;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -264,13 +298,17 @@ router.put("/contactinfo", async (req, res) => {
   try {
     const { email, phone, facebook, instagram } = req.body;
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     portfolio.email = email;
     portfolio.phone = phone;
     portfolio.facebook = facebook;
     portfolio.instagram = instagram;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -285,7 +323,8 @@ router.post("/profile", async (req, res) => {
     await portfolio.save();
     user.portfolio = portfolio._id;
     await user.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -295,7 +334,10 @@ router.put("/profile", async (req, res) => {
   //updates a user's profile info
   try {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     const user = await User.findById(req.user._id);
     const {
       headerImage,
@@ -318,7 +360,8 @@ router.put("/profile", async (req, res) => {
     portfolio.name = name;
     await portfolio.save();
     await user.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -328,13 +371,17 @@ router.put("/about", async (req, res) => {
   try {
     const { location, type, birthday, about } = req.body;
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
-    await portfolio.populate("comments").execPopulate();
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
     portfolio.location = location;
     portfolio.type = type;
     portfolio.birthday = birthday;
     portfolio.about = about;
     await portfolio.save();
-    return res.status(200).send(portfolio);
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
@@ -346,11 +393,24 @@ router.post("/skills", async (req, res) => {
     const portfolio = await Portfolio.findOne({ userId: req.user._id });
     portfolio.skills = req.body.skills;
     await portfolio.save();
-    await portfolio.populate("comments").execPopulate();
-    return res.status(200).send(portfolio);
+    await portfolio
+      .populate("comments")
+      .populate("recommendations", "portfolio profileImage name")
+      .execPopulate();
+    const response = await formatPortfolioObject(portfolio);
+    return res.status(200).send(response);
   } catch (err) {
     return res.status(400).send({ error: err.message });
   }
 });
+
+const formatPortfolioObject = async (portfolio) => {
+  //adds user recommending info to the portfolio response object
+  let user = await User.findById(portfolio.userId);
+  await user
+    .populate("recommending", "portfolio profileImage name")
+    .execPopulate();
+  return { ...portfolio.toObject(), recommending: [...user.recommending] };
+};
 
 module.exports = router;
