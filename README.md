@@ -1,4 +1,4 @@
-# Profolio-backend
+# Portfolio-backend
 
 * A NodeJS REST API server for my Profolio Project
 * for creative professionals to create a portfolio to showcase themselves and their work
